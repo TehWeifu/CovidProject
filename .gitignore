@@ -1,3 +1,11 @@
 .idea/
+
 venv/
+
+data-localized/
+data-localized-processed/
 data-raw/
+data-raw-processed/
+data-source/
+
+logs/
