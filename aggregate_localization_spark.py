@@ -1,10 +1,12 @@
+from math import ceil
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import udf, col, ceil, lit
+from pyspark.sql.functions import udf, col, lit
 from pyspark.sql.types import DoubleType, StringType
 import json
 import sys
 from datetime import datetime
 import os
+import numpy as np
 
 # Initialize SparkSession
 spark = SparkSession.builder.appName("LocalizeCovidReport").getOrCreate()
@@ -13,7 +15,7 @@ spark = SparkSession.builder.appName("LocalizeCovidReport").getOrCreate()
 # Define UDF for adjusting values with multi_factor
 def adjust_value(value, multi_factor):
     if value is not None:
-        return value * multi_factor
+        return (value * multi_factor) * 10 // 10
     return None
 
 
@@ -41,7 +43,7 @@ with open(f"./data-raw/{date}.json", 'r') as file:
 cities_df = cities_df.crossJoin(report_data.limit(1))
 
 # Apply the multi_factor adjustment
-numeric_columns = [col_name for col_name, dtype in cities_df.dtypes if dtype in ['int', 'double']]
+numeric_columns = [col_name for col_name, dtype in report_data.dtypes if dtype in ['int', 'double', 'bigint']]
 for col_name in numeric_columns:
     cities_df = cities_df.withColumn(col_name, adjust_value_udf(col(col_name), col("multi_factor")))
 
