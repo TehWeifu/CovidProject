@@ -1,8 +1,27 @@
 import json
 import sys
 from datetime import datetime
+from math import ceil
+
 import pandas as pd
 import os
+
+
+def aggregate_localization(report, city):
+    report_copy = report.copy()
+
+    # Multiply every numeric value by the multi_factor
+    for key, value in report_copy.items():
+        if key == "date" or key == "states":
+            continue
+
+        if isinstance(value, int):
+            report_copy[key] = ceil(value * city["multi_factor"])
+        elif isinstance(value, float):
+            report_copy[key] = value * city["multi_factor"]
+
+    return report_copy
+
 
 # Get date param from the command line
 date = sys.argv[1]
@@ -20,11 +39,13 @@ with open(f"./data-raw/{date}.json") as covid_report:
 
     # Loop through the cities dataframe
     for index, row in cities.iterrows():
-        # Create a copy of the report
-        report_copy = report.copy()
+        report_copy = aggregate_localization(report, row)
+
         # Add the city to the report
         report_copy["city"] = row["city_id"]
         report_copy["country"] = row["country_id"]
+        report_copy["multi_factor"] = row["multi_factor"]
+
         # Transform the report into a dictionary
         results.append(report_copy)
 
@@ -34,4 +55,4 @@ df_results.to_parquet(f"./data-localized/{date}.parquet")
 print(f"File {date}.parquet created successfully")
 
 # Move the original file to the processed folder
-os.rename(f"./data-raw/{date}.json", f"./data-processed/{date}.json")
+os.rename(f"./data-raw/{date}.json", f"./data-raw-processed/{date}.json")

@@ -43,7 +43,7 @@ url = f"https://api.covidtracking.com/v1/us/{date}.json"
 response = requests.get(url)
 data = response.json()
 
-if data["error"]:
+if "error" in data:
     logger.error(data["message"])
     print(data["message"])
     sys.exit(1)
