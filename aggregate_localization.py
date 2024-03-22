@@ -1,58 +1,61 @@
 import json
+import os
 import sys
 from datetime import datetime
-from math import ceil
 
-import pandas as pd
-import os
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import udf, col
+from pyspark.sql.types import DoubleType
 
-
-def aggregate_localization(report, city):
-    report_copy = report.copy()
-
-    # Multiply every numeric value by the multi_factor
-    for key, value in report_copy.items():
-        if key == "date" or key == "states":
-            continue
-
-        if isinstance(value, int):
-            report_copy[key] = ceil(value * city["multi_factor"])
-        elif isinstance(value, float):
-            report_copy[key] = value * city["multi_factor"]
-
-    return report_copy
+# Initialize SparkSession
+spark = SparkSession.builder.appName("LocalizeCovidReport").getOrCreate()
 
 
-# Get date param from the command line
-date = sys.argv[1]
-if not datetime.strptime(date, '%Y%m%d'):
-    print("The date should be in the format YYYYMMDD")
+# Define UDF for adjusting values with multi_factor
+def adjust_value(value, multi_factor):
+    if value is not None:
+        return (value * multi_factor) * 10 // 10
+    return None
+
+
+adjust_value_udf = udf(adjust_value, DoubleType())
+
+# Validate and get date param from the command line
+try:
+    date = sys.argv[1]
+    datetime.strptime(date, '%Y%m%d')
+except (IndexError, ValueError):
+    print("The date should be provided and in the format YYYYMMDD.")
     sys.exit(1)
 
-# Read the cities .parquet file
-cities = pd.read_parquet("data-source/cities.parquet")
+# Read cities data
+cities_df = spark.read.parquet("data-source/cities.parquet")
 
-results = []
-# Read the report .json file
-with open(f"./data-raw/{date}.json") as covid_report:
-    raw_report = json.load(covid_report)
+# Read the report data
+report_data = spark.read.json(f"./data-raw/{date}.json")
 
-    # Loop through the cities dataframe
-    for index, row in cities.iterrows():
-        city_report = aggregate_localization(raw_report, row)
+# Explode cities_df to have one row for each combination of city and the report
+# This assumes you can expand the report identically for each city,
+# which may require adjustments based on your exact data structure and needs.
+reports_aggregated_df = cities_df.crossJoin(report_data.limit(1))
 
-        # Add the city to the report
-        city_report["city"] = row["city_id"]
-        city_report["country"] = row["country_id"]
-        city_report["multi_factor"] = row["multi_factor"]
+# Apply the multi_factor adjustment
+numeric_columns = [col_name for col_name, dtype in report_data.dtypes if dtype in ['int', 'double', 'bigint']]
+numeric_columns = [col_name for col_name in numeric_columns if col_name != "date"]
+for col_name in numeric_columns:
+    reports_aggregated_df = reports_aggregated_df.withColumn(
+        col_name, adjust_value_udf(col(col_name), col("multi_factor"))
+    )
 
-        # Transform the report into a dictionary
-        results.append(city_report)
+# Add or modify necessary columns (city, country, multi_factor) as per original logic
+# Assuming these columns exist or similar logic applies
 
 # Save the results into a .parquet file
-df_results = pd.DataFrame(results)
-df_results.to_parquet(f"./data-localized/{date}.parquet")
+reports_aggregated_df.write.parquet(f"./data-localized/{date}.parquet")
 print(f"File {date}.parquet created successfully")
 
 # Move the original file to the processed folder
 os.rename(f"./data-raw/{date}.json", f"./data-raw-processed/{date}.json")
+
+# Stop SparkSession
+spark.stop()

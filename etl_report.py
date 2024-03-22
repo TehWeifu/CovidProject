@@ -1,8 +1,11 @@
-import os
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import lit, current_date, substring
 import sys
+import os
 from datetime import datetime
 
-import pandas as pd
+# Initialize a Spark session
+spark = SparkSession.builder.appName("ProcessReport").getOrCreate()
 
 # Get date param from the command line
 date = sys.argv[1]
@@ -10,24 +13,32 @@ if not datetime.strptime(date, '%Y%m%d'):
     print("The date should be in the format YYYYMMDD")
     sys.exit(1)
 
+# Define the path for the new report and the historical data
+report_path = f"./data-localized/{date}.parquet"
+historical_data_path = "./data-source/covid.parquet"
+
 # Read the report .parquet file
-report = pd.read_parquet(f"./data-localized/{date}.parquet")
+report_df = spark.read.parquet(report_path)
 
 # Add processed date to the report with the current date
-report["processed_date"] = datetime.now()
+report_df = report_df.withColumn("processed_date", current_date())
 
-# Get the year from the first 4 gits fo the date column
-report["collected_year"] = report["date"].astype(str).str[:4]
-report['collected_month'] = report["date"].astype(str).str[4:6]
-report['collected_day'] = report["date"].astype(str).str[6:8]
+# Extract year, month, day from the date column
+report_df = report_df.withColumn("collected_year", substring("date", 1, 4))
+report_df = report_df.withColumn("collected_month", substring("date", 5, 2))
+report_df = report_df.withColumn("collected_day", substring("date", 7, 2))
 
-# Append the dataframe to a historical .parquet file
-if os.path.exists("data-source/report.parquet"):
-    historical_report = pd.read_parquet("data-source/covid.parquet")
-    historical_report = historical_report.append(report)
-    historical_report.to_parquet("./data-source/covid.parquet")
+# Append the DataFrame to a historical .parquet file if it exists, otherwise create a new one
+if os.path.exists(historical_data_path):
+    historical_report_df = spark.read.parquet(historical_data_path)
+    combined_df = historical_report_df.unionByName(report_df, allowMissingColumns=True)
+    combined_df.write.mode('overwrite').parquet(historical_data_path)
 else:
-    report.to_parquet("./data-source/covid.parquet")
+    report_df.write.parquet(historical_data_path)
 
 # Move the localized file to the processed folder
-os.rename(f"./data-localized/{date}.parquet", f"./data-localized-processed/{date}.parquet")
+processed_path = f"./data-localized-processed/{date}.parquet"
+os.rename(report_path, processed_path)
+
+# Stop the Spark session
+spark.stop()
