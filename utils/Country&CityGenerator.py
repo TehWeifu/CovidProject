@@ -2,23 +2,23 @@ import pandas as pd
 
 countries = [
     {
-        "id": 1,
+        "country_id": 1,
         "name": "Spain"
     },
     {
-        "id": 2,
+        "country_id": 2,
         "name": "Italy"
     },
     {
-        "id": 3,
+        "country_id": 3,
         "name": "Portugal"
     },
     {
-        "id": 4,
+        "country_id": 4,
         "name": "Germany"
     },
     {
-        "id": 5,
+        "country_id": 5,
         "name": "France"
     }
 ]
@@ -110,5 +110,5 @@ cities = [
 df_countries = pd.DataFrame(countries)
 df_cities = pd.DataFrame(cities)
 
-df_countries.to_parquet("data-source/countries.parquet")
-df_cities.to_parquet("data-source/cities.parquet")
+df_countries.to_parquet("./../data-source/countries.parquet")
+df_cities.to_parquet("./../data-source/cities.parquet")
