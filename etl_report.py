@@ -1,8 +1,8 @@
-import json
+import os
 import sys
 from datetime import datetime
+
 import pandas as pd
-import os
 
 # Get date param from the command line
 date = sys.argv[1]

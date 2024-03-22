@@ -1,12 +1,11 @@
-from math import ceil
-from pyspark.sql import SparkSession
-from pyspark.sql.functions import udf, col, lit
-from pyspark.sql.types import DoubleType, StringType
 import json
+import os
 import sys
 from datetime import datetime
-import os
-import numpy as np
+
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import udf, col
+from pyspark.sql.types import DoubleType
 
 # Initialize SparkSession
 spark = SparkSession.builder.appName("LocalizeCovidReport").getOrCreate()
@@ -44,6 +43,7 @@ cities_df = cities_df.crossJoin(report_data.limit(1))
 
 # Apply the multi_factor adjustment
 numeric_columns = [col_name for col_name, dtype in report_data.dtypes if dtype in ['int', 'double', 'bigint']]
+numeric_columns = [col_name for col_name in numeric_columns if col_name != "date"]
 for col_name in numeric_columns:
     cities_df = cities_df.withColumn(col_name, adjust_value_udf(col(col_name), col("multi_factor")))
 
