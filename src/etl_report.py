@@ -1,5 +1,6 @@
 import logging
 import os
+import shutil
 
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import current_date, substring
@@ -23,9 +24,7 @@ def transform_load_report(date: str, spark: SparkSession, logger: logging.Logger
 
     # Append the DataFrame to a historical .parquet file if it exists, otherwise create a new one
     if os.path.exists(historical_data_path):
-        historical_report_df = spark.read.parquet(historical_data_path)
-        combined_df = historical_report_df.unionByName(report_df, allowMissingColumns=True)
-        combined_df.write.mode('overwrite').parquet(historical_data_path)
+        report_df.write.mode('append').parquet(historical_data_path)
     else:
         report_df.write.parquet(historical_data_path)
 
