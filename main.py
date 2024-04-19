@@ -2,6 +2,8 @@ import logging
 import sys
 from datetime import datetime
 
+from pyspark.sql import SparkSession
+
 from src.aggregate_localization import aggregate_localization
 from src.etl_report import transform_load_report
 from src.ingest import ingest_data
@@ -9,7 +11,10 @@ from src.ingest import ingest_data
 
 def main():
     logger = initialize_logger()
+
     date = get_date_param()
+    spark = SparkSession.builder.appName("ProcessReport").getOrCreate()
+
     if not date:
         logger.error("The date should be provided and in the format YYYYMMDD.")
 
@@ -17,13 +22,15 @@ def main():
         logger.error("Data ingestion failed.")
         return
 
-    if not aggregate_localization(date, logger):
+    if not aggregate_localization(date, spark, logger):
         logger.error("Data aggregation failed.")
         return
 
-    if not transform_load_report(date, logger):
+    if not transform_load_report(date, spark, logger):
         logger.error("Transform and load failed.")
         return
+
+    spark.stop()
 
     logger.info("Process completed successfully.")
 

@@ -5,9 +5,7 @@ from pyspark.sql import SparkSession
 from pyspark.sql.functions import current_date, substring
 
 
-def transform_load_report(date: str, logger: logging.Logger) -> bool:
-    spark = SparkSession.builder.appName("ProcessReport").getOrCreate()
-
+def transform_load_report(date: str, spark: SparkSession, logger: logging.Logger) -> bool:
     # Define the path for the new report and the historical data
     report_path = f"./data-localized/{date}.parquet"
     historical_data_path = "./data-source/covid.parquet"
@@ -35,6 +33,4 @@ def transform_load_report(date: str, logger: logging.Logger) -> bool:
     processed_path = f"./data-localized-processed/{date}.parquet"
     os.rename(report_path, processed_path)
 
-    # Stop the Spark session
-    spark.stop()
     return True

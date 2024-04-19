@@ -13,8 +13,7 @@ def adjust_value(value, multi_factor):
     return None
 
 
-def aggregate_localization(date: str, logger: logging.Logger) -> bool:
-    spark = SparkSession.builder.appName("LocalizeCovidReport").getOrCreate()
+def aggregate_localization(date: str, spark: SparkSession, logger: logging.Logger) -> bool:
     adjust_value_udf = udf(adjust_value, DoubleType())
 
     # Read cities data
@@ -42,8 +41,5 @@ def aggregate_localization(date: str, logger: logging.Logger) -> bool:
 
     # Move the original file to the processed folder
     os.rename(f"./data-raw/{date}.json", f"./data-raw-processed/{date}.json")
-
-    # Stop SparkSession
-    spark.stop()
 
     return True
