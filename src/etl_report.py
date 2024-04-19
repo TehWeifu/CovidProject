@@ -22,11 +22,8 @@ def transform_load_report(date: str, spark: SparkSession, logger: logging.Logger
     report_df = report_df.withColumn("collected_month", substring("date", 5, 2))
     report_df = report_df.withColumn("collected_day", substring("date", 7, 2))
 
-    # Append the DataFrame to a historical .parquet file if it exists, otherwise create a new one
-    if os.path.exists(historical_data_path):
-        report_df.write.mode('append').parquet(historical_data_path)
-    else:
-        report_df.write.parquet(historical_data_path)
+    # Append the DataFrame to historical
+    report_df.write.mode('append').parquet(historical_data_path)
 
     # Move the localized file to the processed folder
     processed_path = f"./data-localized-processed/{date}.parquet"
