@@ -12,9 +12,9 @@ from src.ingest import ingest_data
 def main():
     logger = initialize_logger()
 
-    date = get_date_param()
     spark = SparkSession.builder.appName("ProcessReport").getOrCreate()
 
+    date = get_date_param()
     if not date:
         logger.error("The date should be provided and in the format YYYYMMDD.")
 

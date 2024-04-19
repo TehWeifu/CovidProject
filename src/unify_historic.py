@@ -2,8 +2,5 @@
 
 import pandas as pd
 
-# Read the parquet file
-df = pd.read_parquet('./data-source/covid.parquet')
-
-# Save the DataFrame to a parquet file
-df.to_parquet('./data-source/covid_aggregated.parquet')
+df = pd.read_parquet('./../data-source/covid.parquet')
+df.to_parquet('./../data-source/covid_unified.parquet')
