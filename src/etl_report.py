@@ -1,6 +1,5 @@
 import logging
 import os
-import shutil
 
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import current_date, substring

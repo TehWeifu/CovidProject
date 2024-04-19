@@ -18,6 +18,7 @@ def aggregate_localization(date: str, spark: SparkSession, logger: logging.Logge
 
     # Read cities data
     cities_df = spark.read.parquet("data-source/cities.parquet")
+    cities_df = cities_df.select("city_id", "multi_factor")
 
     # Read the report data
     report_data = spark.read.json(f"./data-raw/{date}.json")
