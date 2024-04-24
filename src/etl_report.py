@@ -21,6 +21,10 @@ def transform_load_report(date: str, spark: SparkSession, logger: logging.Logger
     report_df = report_df.withColumn("collected_month", substring("date", 5, 2))
     report_df = report_df.withColumn("collected_day", substring("date", 7, 2))
 
+    # Drop unnecessary columns
+    report_df = report_df.drop("hash", "hospitalizedCumulative", "lastModified", "posNeg", "recovered", "states",
+                               "total")
+
     # Append the DataFrame to historical
     report_df.write.mode('append').parquet(historical_data_path)
 
