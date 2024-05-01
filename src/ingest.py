@@ -5,6 +5,8 @@ from datetime import datetime
 
 import requests
 
+API_URI = "https://api.covidtracking.com/v1/us/"
+
 
 def is_validate_date(date_string: str) -> bool:
     try:

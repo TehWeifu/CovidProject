@@ -2,5 +2,5 @@
 
 import pandas as pd
 
-df = pd.read_parquet('./../data-source/covid.parquet')
+df = pd.read_parquet('../data-source/covid.parquet')
 df.to_parquet('./../data-source/covid_unified.parquet')
