@@ -25,7 +25,10 @@ In order to run this project, follow the steps below:
 
 ## Running the project
 
-To run the project, run the `main.py` file. This script acts as an orchestrator and will run the following steps:
+To run the project, run the `main.py` file.
+The script needs the date to process as cmd argument in YYYYMMDD format.
+Example: `python main.py 20220101`  
+The script acts as an orchestrator and will run the following steps:
 
 1. Fetch the data from the API
 2. Localize the data, generating data for each city
