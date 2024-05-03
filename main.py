@@ -14,34 +14,44 @@ def main():
 
     spark = SparkSession.builder.appName("ProcessReport").getOrCreate()
 
-    date = get_date_param()
-    if not date:
+    date_range = get_date_range_param()
+    if not date_range:
         logger.error("The date should be provided and in the format YYYYMMDD.")
 
-    if not ingest_data(date, logger):
-        logger.error("Data ingestion failed.")
-        return
+    for date in date_range:
+        if not ingest_data(date, logger):
+            logger.error(f"Data ingestion failed. ({date})")
+            break
 
-    if not aggregate_localization(date, spark, logger):
-        logger.error("Data aggregation failed.")
-        return
+        if not aggregate_localization(date, spark, logger):
+            logger.error(f"Data aggregation failed. ({date})")
+            break
 
-    if not transform_load_report(date, spark, logger):
-        logger.error("Transform and load failed.")
-        return
+        if not transform_load_report(date, spark, logger):
+            logger.error(f"Transform and load failed. ({date})")
+            break
 
     spark.stop()
 
     logger.info("Process completed successfully.")
 
 
-def get_date_param() -> str:
+def get_date_range_param() -> list:
     try:
-        date = sys.argv[1]
-        datetime.strptime(date, '%Y%m%d')
+        if len(sys.argv) == 2:
+            date = sys.argv[1]
+            datetime.strptime(date, '%Y%m%d')
+            return [date]
+        elif len(sys.argv) == 3:
+            start_date = sys.argv[1]
+            end_date = sys.argv[2]
+            datetime.strptime(start_date, '%Y%m%d')
+            datetime.strptime(end_date, '%Y%m%d')
+            return [str(date) for date in range(int(start_date), int(end_date) + 1)]
+        else:
+            return []
     except (IndexError, ValueError):
-        return ''
-    return date
+        return []
 
 
 def initialize_logger() -> logging.Logger:

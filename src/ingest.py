@@ -18,7 +18,7 @@ def is_validate_date(date_string: str) -> bool:
 
 def ingest_data(date: str, logger: logging.Logger) -> bool:
     # Get the data-raw from the API
-    url = f"{os.getenv('API_URI')}{date}.json"
+    url = f"{API_URI}{date}.json"
     response = requests.get(url)
     data = response.json()
 

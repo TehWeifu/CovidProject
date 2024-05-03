@@ -2,9 +2,9 @@
 
 ## Description
 
-This is a simple project to show the COVID-19 report of some european countries. The data is fetched from an external
-API, transformed and loaded into a Power BI report. This project was developed
-by [JulianBSL](https://github.com/TehWeifu) for Sistemas Big Data class at CIPFP Mistala.
+This is a project to show the COVID-19 reports of some european countries. The data is fetched from an externalAPI,
+transformed and loaded into a Power BI report. This project was developedby [JulianBSL](https://github.com/TehWeifu) for
+Sistemas Big Data class at CIPFP Mistala.
 
 ## Requirements
 
@@ -21,13 +21,17 @@ In order to run this project, follow the steps below:
 1. Install python 3.11.5
 2. (optional) Create a virtual environment
 3. Install the required libraries by running `pip install -r requirements.txt` and setting the environment variables
-4. Run both setup scripts: `python utils/setup.py` and `python utils/country&CityGenerator.py`
+4. Run both setup scripts:
+    - Generate directory structure: `python utils/setup.py`
+    - Generate sample country and city data: `python utils/country&CityGenerator.py`
 
 ## Running the project
 
-To run the project, run the `main.py` file.
-The script needs the date to process as cmd argument in YYYYMMDD format.
-Example: `python main.py 20220101`  
+To run the project, run the `main.py` file. It has two execution modes:
+
+- Single date: pass a single date (YYYYMMDD) as argument. Example: `python main.py 20220101`
+- Range of dates: pass a start date and an end date (YYYYMMDD) as arguments. Example: `python main.py 20220101 20220131`
+
 The script acts as an orchestrator and will run the following steps:
 
 1. Fetch the data from the API
